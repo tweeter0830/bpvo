@@ -24,21 +24,7 @@ struct StereoAlgorithm::Impl
   {
     auto alg = cf.get<std::string>("StereoAlgorithm", "BlockMatching");
 
-    if(icompare("SGBM", alg) || icompare("SemiGlobalBlockMatching", alg))
-    {
-      _algorithm = Algorithm::SemiGlobalBlockMatching;
-      _sgbm = make_unique<cv::StereoSGBM>(
-          cf.get<int>("minDisparity"),
-          cf.get<int>("numberOfDisparities"),
-          cf.get<int>("SADWindowSize", 3),
-          cf.get<int>("P1", 0),
-          cf.get<int>("P2", 0),
-          cf.get<int>("uniquenessRatio", 0),
-          cf.get<int>("speckleWindowSize", 0),
-          cf.get<int>("speckleRange", 0),
-          (bool) cf.get<int>("fullDP", 0));
-    }
-    else if(icompare("SGM", alg) || icompare("SemiGlobalMatching", alg))
+    if(icompare("SGM", alg) || icompare("SemiGlobalMatching", alg))
     {
       _algorithm = Algorithm::SemiGlobalMatching;
       SgmStereo::Config conf;
@@ -102,16 +88,6 @@ struct StereoAlgorithm::Impl
           _dmap_buffer.create(left.size(), CV_16SC1);
           CvMat dmap_ = _dmap_buffer;
           cvFindStereoCorrespondenceBM(&left_, &right_, &dmap_, _state);
-
-          _dmap_buffer.convertTo(dmap, CV_32FC1, 1.0 / 16.0, 0.0 );
-        } break;
-
-      case Algorithm::SemiGlobalBlockMatching:
-        {
-          assert(_sgbm);
-
-          _dmap_buffer.create(left.size(), CV_16SC1);
-          _sgbm->operator()(left, right, _dmap_buffer);
 
           _dmap_buffer.convertTo(dmap, CV_32FC1, 1.0 / 16.0, 0.0 );
         } break;
